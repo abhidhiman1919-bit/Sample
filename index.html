@@ -333,6 +333,172 @@ textarea:focus{outline:none;border-color:var(--p)}
 .qr-mid{width:64px;height:64px;font-size:28px}
 .qr-upi{font-size:15px}
 .qr-apps span{font-size:12px;padding:4px 12px}
+
+/* ===== RESPONSIVE: har screen ke hisaab se size adjust ===== */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+img,canvas,svg{max-width:100%}
+.qr-frame img,.qr-frame canvas{max-width:100%;height:auto!important}
+
+/* tablet */
+@media(max-width:900px){
+  .banner{--lg:clamp(80px,12vw,110px)}
+  .bname h1{font-size:clamp(20px,5vw,44px)}
+  .catbox .grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+  .sname{font-size:clamp(16px,2.6vw,19px)}
+  .iv-title h3{font-size:clamp(26px,5.5vw,38px)}
+}
+
+/* phone */
+@media(max-width:600px){
+  body{padding-bottom:150px}
+  button{padding:9px 13px;font-size:13px;border-radius:10px}
+  input,select{padding:10px 11px;font-size:14px;border-radius:10px}
+  textarea{font-size:13px;padding:10px}
+  label{font-size:11px;margin:8px 0 3px}
+
+  .banner{padding:14px 12px 12px;--lg:62px}
+  .logo{width:62px;height:62px;font-size:28px;border-width:2px;margin:0 auto 8px;box-shadow:0 0 0 3px rgba(217,180,106,.18),0 4px 12px rgba(0,0,0,.5)}
+  .brand{min-height:0}
+  .bname .est{font-size:9px;letter-spacing:4px;margin-bottom:4px}
+  .bname h1{font-size:clamp(17px,6vw,26px);letter-spacing:1.5px}
+  .bname p{font-size:14px;margin-top:4px;letter-spacing:1px}
+  .orn{margin-top:8px}
+  .toolbar{padding:0 10px;margin-top:10px;gap:6px}
+  .toolbar button{padding:8px 11px;font-size:12.5px}
+
+  main{padding:8px 10px}
+  .catbox{margin-top:12px;border-radius:14px}
+  .cathead{padding:11px 13px;gap:8px}
+  .catname{font-size:clamp(14px,4.4vw,18px);letter-spacing:1.6px;gap:8px}
+  .catname::before{width:7px;height:7px}
+  .catcount{font-size:10px;padding:3px 9px;letter-spacing:.3px}
+  .catbox .grid{padding:9px;gap:8px;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .svc{min-height:74px;padding:10px 9px;border-radius:12px;gap:7px}
+  .sname{font-size:clamp(15px,4.4vw,17px);padding-right:20px}
+  .sprice{font-size:12px;padding:2px 9px}
+  .tick{width:18px;height:18px;font-size:11px;line-height:15px;top:7px;right:7px}
+
+  #cartbar{padding:8px 10px 10px;gap:6px}
+  .cbrow{gap:8px}
+  #cartbar small{font-size:11px}
+  #cartbar b{font-size:17px}
+  #cartbar input{width:78px}
+  .chip{font-size:11.5px;padding:4px 4px 4px 10px;gap:6px}
+  #cartbar .chip b{font-size:11.5px}
+  .chip button{width:19px;height:19px;font-size:10px;line-height:19px}
+
+  .pbar{padding:9px 10px;gap:8px}
+  .pbar h2{font-size:16px}
+  .pbar button{padding:6px 11px}
+  .pbody{padding:10px}
+  #m-bill .pbody,#m-done .pbody{padding:10px 8px 28px}
+  #m-cust .pbody,#m-cdetail .pbody{padding:12px 10px 28px}
+  .card{padding:11px;border-radius:13px}
+  .pbox{padding:15px;border-radius:15px}
+  .popup{padding:10px}
+
+  .found{padding:8px;gap:9px}
+  .av{width:38px;height:38px;font-size:16px}
+  .status{font-size:12px}
+
+  /* invoice */
+  .iv{--ix:12px;border-radius:12px}
+  .iv-head{padding:18px var(--ix) 15px;gap:8px}
+  .iv-logo{width:62px;height:62px;font-size:28px}
+  .iv-brand h2{font-size:clamp(17px,5.4vw,22px);letter-spacing:1px}
+  .iv-brand p{font-size:14px}
+  .iv-orn i{width:34px}.iv-orn em{width:7px;height:7px}
+  .iv-title{margin-top:16px;padding-bottom:10px}
+  .iv-title h3{font-size:clamp(22px,7vw,28px);letter-spacing:3px}
+  .iv-paid{font-size:11px;padding:4px 11px;margin-left:8px}
+  .iv-no{font-size:11px}.iv-no small{font-size:9px}.iv-no b{font-size:16px}
+  .iv-parties{margin-top:14px;gap:10px}
+  .iv-box{padding:10px 12px;font-size:12.5px}
+  .iv-box small{font-size:10px}
+  .iv-box b{font-size:15px}
+  .iv-tbl{margin-top:14px}
+  .iv-th,.iv-tr{padding:9px 10px;grid-template-columns:26px 1fr auto}
+  .iv-th{font-size:10px}
+  .iv-tr{font-size:14px}
+  .iv-tr .nm small{font-size:11px}
+  .iv-bot{margin-top:14px;gap:14px}
+  .iv-lbl{font-size:10px}
+  .iv-words{font-size:13.5px}
+  .iv-pay{padding:11px 12px;gap:3px 8px}
+  .iv-pay small{font-size:11px}.iv-pay b{font-size:15px}.iv-pay div.full{font-size:11px}
+  .iv-coupon{padding:11px}.iv-coupon b{font-size:10.5px}.iv-coupon span{font-size:18px}.iv-coupon small{font-size:12px}
+  .iv-l{font-size:14px;padding:5px 2px}
+  .iv-grand{font-size:16.5px;padding:12px 13px;margin-top:8px}
+  .iv-saved{font-size:12.5px;padding:8px}
+  .iv-terms{margin-top:16px;padding:10px 12px}
+  .iv-terms small{font-size:10px}
+  .iv-terms ul{font-size:12px;padding-left:16px;line-height:1.55}
+  .iv-thanks{margin-top:22px}
+  .iv-thanks b{font-size:clamp(17px,5.4vw,21px)}
+  .iv-thanks p{font-size:12.5px}
+  .iv-sign{margin-top:18px;font-size:11px}
+  .iv-sign .sg{font-size:clamp(22px,7vw,30px);min-height:44px}
+  .iv-foot{font-size:12px;padding:11px var(--ix) 12px;margin-top:16px}
+  .iv-foot small{font-size:10px}
+
+  /* payment + QR */
+  .paywrap{margin-top:14px;gap:10px}
+  .paylabel{font-size:12px}
+  .paytabs button{padding:10px 8px;font-size:14px;gap:7px}
+  .paytabs button svg{width:18px;height:18px}
+  .qr-head{padding:12px 10px 10px}
+  .qr-head b{font-size:clamp(15px,4.6vw,18px)}
+  .qr-head small{font-size:14px}
+  .qr-body{padding:14px 12px}
+  .qr-amt{font-size:32px}
+  .qr-frame{padding:10px;margin:10px 0 8px;border-radius:15px}
+  .qr-mid{width:46px;height:46px;font-size:20px}
+  .qr-upi{font-size:12.5px}
+  .qr-apps span{font-size:10.5px;padding:3px 9px}
+
+  /* customers */
+  .ccard{padding:11px;gap:10px 12px!important}
+  .ccard .av{width:40px;height:40px;font-size:16px}
+  .cn{font-size:14.5px}.cp{font-size:12px}
+  .cstatrow small{font-size:10px}.cstatrow b{font-size:13px}
+  .cdel svg{width:16px;height:16px}
+  .cprof{padding:14px;gap:12px}
+  .pav{width:52px;height:52px;font-size:22px}
+  .pinfo h3{font-size:18px}.pinfo div{font-size:13px}
+  .cstat{padding:11px}.cstat small{font-size:11px}.cstat b{font-size:17px}
+  .vcard{padding:11px 12px}
+  .vtop b{font-size:14px}.vrow{font-size:13px;padding:6px 0}.vrow.vtot{font-size:15px}
+  .hhead{font-size:14px}
+
+  /* admin + popups */
+  #m-admin .card{grid-template-columns:1fr}
+  .acat{padding:8px}
+  .aicon{width:52px;height:52px}.aicon svg{width:25px;height:25px}
+  .okring{width:62px;height:62px}.okring svg{width:34px;height:34px}
+  .amsg{font-size:13px}
+  .switchrow b{font-size:13px}
+}
+
+/* chhote phones */
+@media(max-width:360px){
+  .catbox .grid{grid-template-columns:1fr 1fr;gap:6px;padding:7px}
+  .sname{font-size:15px}
+  .iv-th,.iv-tr{grid-template-columns:22px 1fr auto}
+  .qr-amt{font-size:28px}
+}
+
+/* bahut bade desktop screen */
+@media(min-width:1400px){
+  main{max-width:1400px;margin:0 auto}
+  .toolbar{max-width:1400px;margin-left:auto;margin-right:auto}
+}
+
+/* landscape phone: bottom bar kam jagah le */
+@media(max-height:480px) and (orientation:landscape){
+  body{padding-bottom:120px}
+  .banner{padding-top:10px;padding-bottom:8px}
+  .page,.pbox{-webkit-overflow-scrolling:touch}
+}
 </style>
 </head>
 <body>

@@ -253,7 +253,7 @@ function updatePay() {
          <div class="qr-apps"><span>Google Pay</span><span>PhonePe</span><span>Paytm</span><span>BHIM</span></div>
          <div class="status" style="margin-top:8px">Scan with any UPI app, then tap Confirm below</div>`
       : `<div class="status" style="margin:16px 0">Set your UPI ID in Admin to show the QR.</div>`) + `</div>`;
-  const qs = Math.max(220, Math.min(300, window.innerWidth - 110));
+  const qs = Math.max(170, Math.min(300, window.innerWidth - 120));
   if (S.upi) new QRCode($('qrcode'), { text: `upi://pay?pa=${encodeURIComponent(S.upi)}&pn=${encodeURIComponent(S.name)}&am=${cur.total}&cu=INR&tn=${encodeURIComponent(cur.inv)}`, width: qs, height: qs, colorDark: '#2a0f1e', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
 }
 
