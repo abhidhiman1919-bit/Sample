@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parlour Billing</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Playfair+Display:wght@700;800&family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Great+Vibes&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,'Segoe UI',Roboto,sans-serif}
+:root{--p:#7a2150;--p2:#b9487f;--gold:#d9b46a;--bg:#faf3f6;--line:#ead7e0;--mut:#7a6670}
+body{background:var(--bg);color:#2b1a23;padding-bottom:100px}
+.hide{display:none!important}
+button{cursor:pointer;border:0;border-radius:12px;padding:11px 16px;font-weight:600;font-size:14px}
+input,select{width:100%;padding:12px;border:1.5px solid var(--line);border-radius:12px;font-size:15px;background:#fff}
+input:focus{outline:none;border-color:var(--p)}
+
+/* banner */
+.banner{position:relative;overflow:hidden;background:linear-gradient(135deg,#1a0a14 0%,#4a1230 55%,#1a0a14 100%);color:#fff;--lg:clamp(96px,13vw,150px);padding:24px calc(var(--lg) + 40px) 18px;border-bottom:3px solid var(--gold);text-align:center}
+.banner::before{content:'';position:absolute;top:0;left:-150%;width:150%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);transform:skewX(-25deg);animation:sheen 5s linear infinite}
+@keyframes sheen{to{left:150%}}
+.brand{position:relative;display:flex;align-items:center;justify-content:center;min-height:var(--lg)}
+.logo{position:absolute;left:calc(-1 * var(--lg) - 24px);top:50%;transform:translateY(-50%);width:var(--lg);height:var(--lg);border-radius:50%;object-fit:cover;border:3px solid var(--gold);background:#2a0f1e;display:flex;align-items:center;justify-content:center;font:800 52px 'Playfair Display',Georgia,serif;color:var(--gold);box-shadow:0 0 0 5px rgba(217,180,106,.18),0 8px 24px rgba(0,0,0,.5);overflow:hidden}
+.logo img{width:100%;height:100%;object-fit:cover}
+.bname{text-align:center}
+.bname .est{font:600 13px Cinzel,Georgia,serif;letter-spacing:8px;color:var(--gold);text-transform:uppercase;margin-bottom:6px}
+.bname h1{white-space:nowrap;font:800 clamp(20px,4.4vw,64px)/1.1 'Playfair Display',Georgia,serif;letter-spacing:3px;text-transform:uppercase;background:linear-gradient(180deg,#fff 20%,#f3d9a0 60%,#d9b46a 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 6px rgba(0,0,0,.55))}
+.bname p{font:italic 600 clamp(17px,2.4vw,24px) 'Cormorant Garamond',Georgia,serif;color:#f0dbe4;letter-spacing:2px;margin-top:8px}
+.orn{position:relative;height:1px;width:min(260px,60%);margin:12px auto 0;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+@media(max-width:600px){.banner{padding:18px 14px 16px}.logo{position:static;transform:none;margin:0 auto 10px}.brand{flex-direction:column}}
+.toolbar{display:flex;justify-content:space-between;gap:10px;margin:12px 0 0;padding:0 16px}
+.toolbar button{background:#fff;color:var(--p);border:1.5px solid var(--gold);padding:10px 16px}
+
+main{padding:14px 16px}
+.catbox{background:#fff;border:1px solid var(--line);border-radius:18px;margin-top:16px;overflow:hidden;box-shadow:0 3px 14px rgba(122,33,80,.07)}
+.cathead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;background:linear-gradient(120deg,#2a0f1e,var(--p));border-bottom:2px solid var(--gold)}
+.catname{font:700 18px 'Playfair Display',Georgia,serif;color:#fff;letter-spacing:.6px}
+.catcount{font-size:11px;color:var(--gold);border:1px solid rgba(217,180,106,.65);border-radius:20px;padding:3px 11px;white-space:nowrap}
+.grid{display:grid}
+.catbox .grid{padding:12px;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.svc{position:relative;background:#fffafc;border:1.5px solid var(--line);border-radius:14px;text-align:left;padding:13px 12px;display:flex;flex-direction:column;gap:10px;color:#2b1a23;min-height:84px;justify-content:space-between;transition:transform .15s,box-shadow .15s,border-color .15s}
+.svc:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(122,33,80,.15);border-color:var(--p2)}
+.sname{font-size:14px;font-weight:600;line-height:1.3;padding-right:22px}
+.sprice{align-self:flex-start;background:#fdecf4;color:var(--p);font-weight:800;font-size:14px;padding:3px 11px;border-radius:20px}
+.tick{position:absolute;top:9px;right:9px;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);background:#fff;color:transparent;font-style:normal;font-size:13px;line-height:19px;text-align:center}
+.svc.sel{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;border-color:var(--p)}
+.svc.sel .sprice{background:rgba(255,255,255,.22);color:#fff}
+.svc.sel .tick{background:var(--gold);border-color:var(--gold);color:#2a0f1e;font-weight:800}
+.okring{width:74px;height:74px;margin:0 auto 12px;border-radius:50%;background:linear-gradient(135deg,#1e8449,#2ecc71);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 7px rgba(46,204,113,.18);animation:okpop .4s cubic-bezier(.2,.9,.3,1.4)}
+.okring svg{width:42px;height:42px;fill:none;stroke:#fff;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:50;stroke-dashoffset:50;animation:okdraw .5s .25s forwards}
+@keyframes okpop{from{transform:scale(.3);opacity:0}}
+@keyframes okdraw{to{stroke-dashoffset:0}}
+#cartbar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:2px solid var(--gold);padding:10px 14px;display:flex;gap:10px;align-items:center;z-index:6}
+#cartbar>div{flex:1}#cartbar small{color:var(--mut);display:block}#cartbar b{font-size:20px}
+#cartbar input{width:100px}
+.pri{background:linear-gradient(120deg,var(--p),var(--p2));color:#fff}.gray{background:#eee;color:#333}
+
+/* full-screen pages */
+.page{position:fixed;inset:0;background:var(--bg);z-index:10;overflow:auto}
+.pbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:12px;padding:12px 14px;background:linear-gradient(120deg,#2a0f1e,var(--p));color:#fff;border-bottom:2px solid var(--gold)}
+.pbar h2{font:700 19px 'Playfair Display',Georgia,serif;flex:1}
+.pbar button{background:rgba(255,255,255,.15);color:#fff;padding:8px 14px}
+.pbody{max-width:720px;margin:0;padding:16px}
+.pbody>*+*{margin-top:12px}
+.card{background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:14px}
+.status{font-size:13px;color:var(--mut);min-height:18px}.ok{color:#1e8449}
+label{font-size:12px;color:var(--mut);display:block;margin:10px 0 4px}
+.found{display:flex;align-items:center;gap:12px;padding:10px;border:1.5px solid var(--line);border-radius:14px;background:#fff;margin-top:8px}
+.found.exact{border-color:#1e8449;background:#effaf3}
+.found .who{flex:1;min-width:0}.found small{color:var(--mut);display:block}
+.av{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;flex:none}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;background:#fdecf4;color:var(--p);font-weight:700}
+.selbtn{background:#1e8449;color:#fff;padding:9px 14px}.x{background:#fbe3e0;color:#c0392b;padding:8px 10px}.add{background:var(--p);color:#fff;padding:9px 14px}
+.row{display:flex;gap:6px;margin-top:6px;align-items:center}.row input{flex:1;min-width:0}
+
+/* summary */
+.sumhead{display:flex;gap:12px;align-items:center}
+.sumhead .meta{margin-left:auto;text-align:right;font-size:12px;color:var(--mut)}
+.line{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px dashed var(--line);font-size:15px}
+.line.grand{border:0;font-weight:800;font-size:22px;color:var(--p);padding-top:12px}
+.line.save{color:#1e8449}
+.offer{background:#fdf3dd;border:1px solid var(--gold);color:#7a5a12;padding:10px;border-radius:12px;font-size:13px;font-weight:600;text-align:center}
+/* bill summary + done pages */
+#m-bill .pbody,#m-done .pbody{max-width:860px;margin:0 auto;padding:18px 16px 40px}
+.found{cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .15s}
+.found:hover{border-color:var(--p2);box-shadow:0 4px 14px rgba(122,33,80,.14)}
+.found:active{transform:scale(.99)}
+.qrcard{padding:0!important;overflow:hidden;max-width:380px;width:100%;margin:0 auto!important;text-align:center;border:1.5px solid var(--gold);box-shadow:0 10px 30px rgba(122,33,80,.18)}
+.qr-head{padding:16px 14px 13px;background:linear-gradient(135deg,#1a0a14,#4a1230 60%,#1a0a14);border-bottom:3px solid var(--gold)}
+.qr-head b{display:block;font:800 clamp(17px,4.6vw,22px)/1.2 'Playfair Display',Georgia,serif;letter-spacing:1.5px;text-transform:uppercase;color:#f3d9a0}
+.qr-head small{display:block;margin-top:5px;font:italic 600 16px 'Cormorant Garamond',Georgia,serif;letter-spacing:2px;color:#f0dbe4}
+.qr-body{padding:18px 16px 18px;background:radial-gradient(circle at 50% 0,#fff 0,#fdf3f8 100%)}
+.qr-lbl{font-size:12px;font-weight:600;color:var(--mut)}
+.qr-amt{font:800 34px/1.2 'Playfair Display',Georgia,serif;color:var(--p)}
+.qr-frame{position:relative;display:inline-block;padding:14px;margin:12px 0 10px;background:#fff;border-radius:20px;border:2px solid var(--gold);box-shadow:0 0 0 6px rgba(217,180,106,.18),0 10px 24px rgba(122,33,80,.18)}
+.qr-frame #qrcode{margin:0}
+.qr-frame img,.qr-frame canvas{display:block;border-radius:6px}
+.qr-mid{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:48px;height:48px;border-radius:50%;background:#fff;border:2.5px solid var(--gold);display:flex;align-items:center;justify-content:center;overflow:hidden;font:800 22px 'Playfair Display',Georgia,serif;color:var(--p)}
+.qr-mid img{width:100%;height:100%;object-fit:cover;border-radius:0!important}
+.qr-upi{font-size:13px;color:var(--mut);word-break:break-all}.qr-upi b{color:#2b1a23}
+.qr-apps{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin:12px 0 4px}
+.qr-apps span{font-size:11px;font-weight:700;color:var(--p);background:#fdecf4;border:1px solid var(--line);border-radius:20px;padding:3px 10px}
+/* customers pages */
+#m-cust .pbody,#m-cdetail .pbody{max-width:980px;margin:0 auto;padding:20px 16px 40px}
+.ic svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;vertical-align:-3px}
+.sbar{position:relative}
+.sbar svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;stroke:var(--mut);fill:none;stroke-width:2;stroke-linecap:round}
+.sbar input{padding-left:42px}
+.chead{font-size:13px;color:var(--mut);margin:14px 2px 0;font-weight:600}
+.clist{display:flex;flex-direction:column;gap:10px}
+.ccard{display:grid!important;grid-template-columns:auto minmax(0,1.2fr) minmax(0,2fr) auto;gap:18px!important}
+.cstatrow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.cstatrow small{display:block;font-size:11px;color:var(--mut)}.cstatrow b{display:block;font-size:15px;margin-top:2px;color:#2b1a23}.cstatrow b.pl{color:var(--p)}
+.cact{display:flex;align-items:center;gap:2px}
+.cchev{width:20px;height:20px;fill:none;stroke:#b9a3ae;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ccard:hover .cchev{stroke:var(--p)}
+@media(max-width:700px){.ccard{grid-template-columns:auto 1fr auto!important;gap:12px 14px!important}.cstatrow{grid-column:1/-1;order:4;border-top:1px solid var(--line);padding-top:10px}.ci{order:2}.cact{order:3}}
+.clist>*{margin-top:0!important}
+.ccard{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.ccard:hover{border-color:var(--p2);box-shadow:0 6px 18px rgba(122,33,80,.12)}
+.ccard .av{width:48px;height:48px;font-size:19px;background:#f6e9f0;color:var(--p)}
+.ci{flex:1;min-width:0}
+.cn{font-weight:700;font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cp{font-size:13px;color:var(--mut);margin-top:2px}
+.cm{display:flex;gap:6px;margin-top:8px;font-size:12px;color:var(--mut);flex-wrap:wrap}
+.cm span{background:#f7f1f4;border-radius:6px;padding:2px 8px}.cm b{color:var(--p)}
+.cdel{background:transparent;color:#a08a96;padding:8px;border-radius:10px;flex:none}
+.cdel:hover{background:#fbe3e0;color:#c0392b}
+.cdel svg{display:block;width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.cempty{text-align:center;padding:48px 16px;color:var(--mut);background:#fff;border:1px dashed var(--line);border-radius:14px}
+.cempty b{color:#2b1a23;font-size:16px}
+.cprof{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:20px;border-radius:16px;color:#fff;background:linear-gradient(135deg,#1a0a14,#4a1230 60%,#1a0a14);border-bottom:3px solid var(--gold)}
+.pav{width:64px;height:64px;border-radius:50%;border:2.5px solid var(--gold);display:flex;align-items:center;justify-content:center;font:800 28px 'Playfair Display',Georgia,serif;color:var(--gold);background:#2a0f1e;flex:none}
+.pinfo{flex:1;min-width:150px}.pinfo h3{font:700 22px 'Playfair Display',Georgia,serif;color:#f3d9a0;word-break:break-word}
+.pinfo div{color:#f0dbe4;font-size:14px;margin-top:4px}
+.pside{text-align:right;font-size:13px}.pside small{display:block;color:#d9b7c8;font-size:11px}.pside b{color:#fff}
+.cstats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.cstat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}
+.cstat small{display:block;font-size:12px;color:var(--mut)}.cstat b{display:block;font-size:21px;color:var(--p);margin-top:3px}
+@media(max-width:560px){.cstats{grid-template-columns:repeat(2,1fr)}.pside{text-align:left}}
+.hhead{font-weight:700;font-size:15px;color:#2b1a23;display:flex;align-items:center;gap:8px}
+.hhead span{font-size:12px;background:#f1e4eb;color:var(--p);border-radius:20px;padding:1px 9px}
+.vcard{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.vtop{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding-bottom:10px;border-bottom:2px solid var(--gold)}
+.vtop b{display:block;font-size:15px}.vtop small{color:var(--mut);font-size:12px}
+.pmode{font-size:12px;font-weight:700;border-radius:20px;padding:3px 12px}
+.pmode.cash{background:#fdf3dd;color:#7a5a12}.pmode.upi{background:#e6f6ec;color:#1e8449}
+.vrow{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.vrow.save{color:#1e8449}.vrow.vtot{border:0;font-weight:800;font-size:17px;color:var(--p);padding-bottom:0}
+/* switches, alert popup, input errors */
+.switchrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0}
+.switchrow b{display:block;font-size:14px}.switchrow small{display:block;color:var(--mut);font-size:12px;margin-top:2px}
+.switchrow+.switchrow{border-top:1px solid var(--line)}
+#m-admin .card>.offhead{grid-column:1/-1;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.offhead b{display:block;font-size:14px}.offhead small{display:block;color:var(--mut);font-size:12px;margin-top:2px;line-height:1.5}
+.offf{transition:opacity .15s}.offf.dim{opacity:.45}
+.sw{position:relative;width:46px;height:26px;flex:none;display:block;margin:0}
+.sw input{position:absolute;inset:0;opacity:0;width:100%;height:100%;margin:0;padding:0;border:0;cursor:pointer;z-index:1}
+.sw span{position:absolute;inset:0;background:#d9cbd2;border-radius:20px;transition:.2s}
+.sw span::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:.2s}
+.sw input:checked+span{background:var(--p)}.sw input:checked+span::after{transform:translateX(20px)}
+#opt-box:empty{display:none}
+.optcard{padding:2px 16px!important}
+.aicon{width:62px;height:62px;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;background:#fdf3dd;color:#b7791f;box-shadow:0 0 0 7px rgba(217,180,106,.18)}
+.aicon.danger{background:#fbe3e0;color:#c0392b;box-shadow:0 0 0 7px rgba(192,57,43,.1)}
+.aicon svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.amsg{font-size:14px;color:var(--mut);line-height:1.55;margin-top:6px}
+.danbtn{background:#c0392b;color:#fff}
+input.err{border-color:#c0392b!important;background:#fff8f7}
+.paywrap{margin-top:18px;display:flex;flex-direction:column;gap:12px}
+.paylabel{font-size:13px;font-weight:700;color:var(--mut)}
+.paytabs{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:5px;background:#f1e4eb;border-radius:16px}
+.paytabs button{display:flex;align-items:center;justify-content:center;gap:9px;background:transparent;color:var(--mut);padding:13px 10px;border-radius:12px;font-size:15px;transition:background .15s,color .15s,box-shadow .15s}
+.paytabs button svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.paytabs button.on{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;box-shadow:0 4px 12px rgba(122,33,80,.3)}
+#qrcode{display:flex;justify-content:center;margin:8px 0}
+.item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px;background:#fff;border:1.5px solid var(--line);border-radius:14px;margin-top:8px}
+.item small{color:var(--mut);display:block}
+.acat{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:10px;margin-top:10px}
+.logoprev{display:flex;align-items:center;gap:12px}
+.logoprev img{width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--gold)}
+.popup{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20;display:flex;align-items:center;justify-content:center;padding:16px}
+.pbox{max-height:92vh;overflow:auto;background:#fff;border-radius:18px;padding:20px;width:100%;max-width:380px;border-top:4px solid var(--gold)}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.tiles div{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:10px;text-align:center;font-size:12px;color:var(--mut)}
+.tiles b{display:block;font-size:17px;color:var(--p);margin-top:2px}
+@media(max-width:500px){.tiles{grid-template-columns:repeat(2,1fr)}}
+#m-admin .pbody{max-width:none}
+#m-admin .card{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0 18px}
+#m-admin .card>.logoprev,#m-admin .card>button{grid-column:1/-1}
+#m-bill,#m-done{z-index:25}
+/* invoice (bill summary + done page) – same look as the PDF */
+.iv{position:relative;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 6px 24px rgba(122,33,80,.10);padding-bottom:0}
+.iv>*{position:relative;z-index:1}
+.iv>.iv-wm{position:absolute;z-index:0;left:50%;top:54%;transform:translate(-50%,-50%);opacity:.05;pointer-events:none;user-select:none;color:var(--p);font:800 clamp(180px,48vw,320px)/1 'Playfair Display',Georgia,serif}
+.iv-wm img{display:block;width:min(62vw,320px);height:min(62vw,320px);border-radius:50%;object-fit:cover}
+.iv-head{display:flex;align-items:center;justify-content:center;gap:16px;padding:22px 20px 18px;background:linear-gradient(135deg,#1a0a14,#4a1230 60%,#1a0a14);border-bottom:3px solid var(--gold);text-align:center}
+.iv-logo{width:72px;height:72px;border-radius:50%;border:2.5px solid var(--gold);background:#2a0f1e;color:var(--gold);display:flex;align-items:center;justify-content:center;font:800 32px 'Playfair Display',Georgia,serif;flex:none;overflow:hidden}
+.iv-logo img{width:100%;height:100%;object-fit:cover}
+.iv-brand h2{font:800 clamp(19px,4vw,28px)/1.15 'Playfair Display',Georgia,serif;letter-spacing:1.5px;text-transform:uppercase;color:#f3d9a0;word-break:break-word}
+.iv-brand p{font:italic 600 clamp(14px,2.4vw,18px) 'Cormorant Garamond',Georgia,serif;color:#f0dbe4;margin-top:4px;letter-spacing:1px}
+.iv-orn{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:9px}
+.iv-orn i{display:block;height:1px;width:42px;background:var(--gold)}
+.iv-orn em{display:block;width:7px;height:7px;background:var(--gold);transform:rotate(45deg)}
+.iv-title{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:20px 20px 0;padding-bottom:12px;border-bottom:1.5px solid var(--gold)}
+.iv-title h3{display:inline;font:800 clamp(24px,5.5vw,32px)/1 'Playfair Display',Georgia,serif;letter-spacing:4px;color:var(--p)}
+.iv-paid{display:inline-block;margin-left:12px;vertical-align:middle;padding:5px 14px;border-radius:8px;background:#e6f6ec;color:#1e8449;font-size:12px;font-weight:800;letter-spacing:.5px}
+.iv-no{margin-left:auto;text-align:right;font-size:12px;color:var(--mut);line-height:1.5}
+.iv-no small{display:block;font-size:10px;letter-spacing:1px}
+.iv-no b{display:block;font-size:18px;color:#2b1a23}
+.iv-parties{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 20px 0}
+.iv-box{min-width:0;padding:12px 14px;border-left:3px solid var(--gold);border-radius:8px;background:#fdf6f9;font-size:13px;line-height:1.6;color:var(--mut)}
+.iv-box small{display:block;font-size:10px;font-weight:800;letter-spacing:1px;color:var(--p2);margin-bottom:2px}
+.iv-box b{display:block;font-size:16px;color:#2b1a23;word-break:break-word}
+.iv-tbl{margin:20px 20px 0;border-bottom:1.5px solid var(--gold)}
+.iv-th,.iv-tr{display:grid;grid-template-columns:30px 1fr auto;gap:8px;align-items:center;padding:10px 12px}
+.iv-th{border-radius:8px;background:var(--p);color:#fff;font-size:11px;font-weight:800;letter-spacing:1px}
+.iv-tr{font-size:15px}
+.iv-tr:nth-child(odd){background:#fdf6f9}
+.iv-th span:last-child,.iv-tr span:last-child{text-align:right}
+.iv-bot{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;margin:18px 20px 0}
+.iv-bot>div{min-width:0}
+.iv-lbl{font-size:10px;font-weight:800;letter-spacing:1px;color:var(--p2)}
+.iv-words{margin-top:5px;font-style:italic;font-size:13.5px;line-height:1.5;color:#2b1a23}
+.iv-pay{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:4px 10px}
+.iv-pay small{font-size:11px;color:var(--mut)}
+.iv-pay b{font-size:15px;color:var(--p)}
+.iv-pay b.st{color:#1e8449}.iv-pay b.st.pend{color:#b7791f}
+.iv-pay div.full{grid-column:1/-1;font-size:11.5px;color:var(--mut);word-break:break-all}
+.iv-coupon{margin-top:14px;padding:12px;border:2px dashed var(--gold);border-radius:12px;background:#fffaf0;text-align:center;color:#7a5a12}
+.iv-coupon b{display:block;font-size:11px;letter-spacing:1.5px}
+.iv-coupon span{display:block;margin:3px 0;font:800 19px 'Playfair Display',Georgia,serif;color:var(--p)}
+.iv-coupon small{font-size:12px}
+.iv-l{display:flex;justify-content:space-between;gap:10px;padding:5px 2px;font-size:14px}
+.iv-l.g{color:#1e8449}.iv-l.bd{font-weight:800}
+.iv-grand{display:flex;justify-content:space-between;gap:10px;margin-top:8px;padding:13px 14px;border-radius:10px;background:var(--p);color:#fff;font-weight:800;font-size:17px}
+.iv-saved{margin-top:8px;padding:8px;border-radius:10px;background:#e6f6ec;color:#1e8449;font-size:12.5px;font-weight:700;text-align:center}
+.iv-thanks{margin:26px 20px 0;text-align:center}
+.iv-thanks .iv-orn i{width:70px}
+.iv-thanks b{display:block;margin-top:12px;font:italic 700 clamp(18px,4vw,22px) 'Cormorant Garamond',Georgia,serif;color:var(--p)}
+.iv-thanks p{margin-top:3px;font-size:13px;color:var(--mut)}
+.iv-sign{display:flex;justify-content:space-between;gap:20px;margin:34px 20px 0;font-size:11px;color:var(--mut)}
+.iv-sign span{flex:0 0 38%;padding-top:5px;border-top:1px solid #b3a0aa}
+.iv-sign span:last-child{text-align:right}
+.iv-foot{margin-top:24px;padding:12px 16px 13px;background:#1a0a14;border-top:3px solid var(--gold);text-align:center;color:#f0dbe4;font-size:12.5px;line-height:1.5}
+.iv-foot small{display:block;margin-top:3px;font-size:10.5px;color:#bea0af}
+@media(max-width:620px){.iv-bot{grid-template-columns:1fr}.iv-tots{order:-1}}
+@media(max-width:520px){.iv-head{flex-direction:column;gap:10px}.iv-parties{grid-template-columns:1fr}}
+
+/* bigger invoice + signature */
+#m-bill .pbody,#m-done .pbody{max-width:1040px}
+.iv{--ix:clamp(16px,4vw,36px)}
+.iv-head{padding:30px var(--ix) 24px;gap:22px}
+.iv-logo{width:96px;height:96px;font-size:42px}
+.iv-brand h2{font-size:clamp(23px,4.6vw,38px)}
+.iv-brand p{font-size:clamp(17px,2.8vw,25px)}
+.iv-orn i{width:56px}.iv-orn em{width:9px;height:9px}
+.iv-title,.iv-parties,.iv-tbl,.iv-bot,.iv-thanks,.iv-sign{margin-left:var(--ix);margin-right:var(--ix)}
+.iv-title{margin-top:28px;padding-bottom:16px}
+.iv-title h3{font-size:clamp(30px,6.5vw,46px)}
+.iv-paid{font-size:14px;padding:7px 18px;margin-left:16px}
+.iv-no{font-size:14px}.iv-no small{font-size:12px}.iv-no b{font-size:clamp(20px,3.6vw,26px)}
+.iv-parties{margin-top:24px;gap:18px}
+.iv-box{padding:16px 18px;font-size:15px}
+.iv-box small{font-size:12px;margin-bottom:4px}
+.iv-box b{font-size:clamp(17px,2.8vw,21px)}
+.iv-tbl{margin-top:26px}
+.iv-th,.iv-tr{grid-template-columns:38px 1fr auto;padding:14px 16px}
+.iv-th{font-size:13px}.iv-tr{font-size:clamp(16px,2.6vw,19px)}
+.iv-bot{margin-top:24px;gap:28px}
+.iv-lbl{font-size:12px}.iv-words{font-size:clamp(15px,2.4vw,18px);margin-top:7px}
+.iv-pay{padding:16px 18px}
+.iv-pay small{font-size:13px}.iv-pay b{font-size:19px}.iv-pay div.full{font-size:13px}
+.iv-coupon{padding:16px}.iv-coupon b{font-size:13px}.iv-coupon span{font-size:clamp(20px,3.4vw,26px)}.iv-coupon small{font-size:14px}
+.iv-l{font-size:clamp(15px,2.5vw,18px);padding:7px 2px}
+.iv-grand{font-size:clamp(19px,3.2vw,24px);padding:17px 18px;margin-top:12px}
+.iv-saved{font-size:15px;padding:11px}
+.iv-thanks{margin-top:36px}
+.iv-thanks b{font-size:clamp(23px,4.6vw,32px)}.iv-thanks p{font-size:15px}
+.iv-sign{margin-top:26px;align-items:flex-end;font-size:13px}
+.iv-sign>div{flex:0 0 42%;border-top:1px solid #b3a0aa;padding-top:6px}
+.iv-sign>div:last-child{text-align:right}
+.iv-sign .sg{display:block;margin:0 0 6px;min-height:58px;display:flex;align-items:flex-end;justify-content:flex-end;font:400 clamp(30px,6vw,46px)/1.05 'Great Vibes','Brush Script MT','Segoe Script',cursive;color:#1d2a5c;text-align:right;word-break:break-word}
+.iv-sign-wrap{display:flex;flex-direction:column}
+.iv-foot{font-size:14px;padding:15px var(--ix) 16px}.iv-foot small{font-size:12px}
+@media(max-width:520px){.iv-logo{width:84px;height:84px;font-size:36px}.iv-sign>div{flex-basis:46%}}
+.iv-sign span{flex:none;padding:0;border:0}
+.iv-sign .sg{font-size:clamp(26px,5vw,38px)}
+
+/* dashboard: professional category + service text */
+.catbox{border-radius:20px}
+.cathead{justify-content:flex-start;gap:14px;padding:16px 20px}
+.catname{flex:1;min-width:0;display:flex;align-items:center;gap:12px;font:600 clamp(18px,3.6vw,25px)/1.2 Cinzel,'Playfair Display',Georgia,serif;letter-spacing:3px;text-transform:uppercase;background:linear-gradient(180deg,#fff 10%,#f3d9a0 60%,#d9b46a 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 3px rgba(0,0,0,.4))}
+.catname::before{content:'';flex:none;width:9px;height:9px;background:var(--gold);transform:rotate(45deg)}
+.catname::after{content:'';flex:1;min-width:20px;height:1px;margin-left:8px;background:linear-gradient(90deg,rgba(217,180,106,.8),transparent)}
+.catcount{font-size:12px;letter-spacing:1px;padding:4px 13px;font-weight:600}
+.catbox .grid{gap:12px;padding:14px;grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}
+.svc{min-height:98px;padding:15px 14px;border-radius:16px}
+.sname{font:700 clamp(18px,2.8vw,21px)/1.2 'Cormorant Garamond','Playfair Display',Georgia,serif;letter-spacing:.3px;padding-right:26px}
+.sprice{background:#fffaf0;border:1.5px solid var(--gold);color:var(--p);font-size:14px;font-weight:800;letter-spacing:.3px;padding:3px 12px}
+.svc.sel .sprice{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.6);color:#fff}
+
+/* selected-services strip in bottom bar */
+body{padding-bottom:190px}
+#cartbar{flex-direction:column;align-items:stretch;gap:8px;padding:10px 14px 12px}
+#cartbar>div{flex:none}
+.cbrow{display:flex;gap:10px;align-items:center}
+.cbrow>div{flex:1}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 4px;scrollbar-width:thin}
+.chip{flex:none;display:flex;align-items:center;gap:8px;padding:6px 6px 6px 12px;border:1.5px solid var(--gold);border-radius:20px;background:#fffaf0;color:#2b1a23;font-size:13px;font-weight:600;white-space:nowrap}
+#cartbar .chip b{font-size:13px;color:var(--p)}
+.chip button{width:22px;height:22px;padding:0;border-radius:50%;background:#f1e4eb;color:var(--p);font-size:12px;line-height:22px}
+textarea{width:100%;padding:12px;border:1.5px solid var(--line);border-radius:12px;font-size:14px;background:#fff;resize:vertical;font-family:inherit}
+textarea:focus{outline:none;border-color:var(--p)}
+/* invoice: more details */
+.iv-th,.iv-tr{grid-template-columns:38px 1fr 54px 96px 108px}
+.iv-tr:nth-child(odd){background:transparent}.iv-tr:nth-child(even){background:#fdf6f9}
+.iv-th span:nth-child(3),.iv-tr .q{text-align:center}
+.iv-th span:nth-child(4),.iv-tr .r{text-align:right}
+.iv-tr .nm small{display:block;margin-top:1px;font-size:12px;color:var(--mut)}
+.iv-pay>div:not(.full){min-width:0}
+.iv-terms{margin:24px var(--ix) 0;padding:14px 18px;border-left:3px solid var(--gold);border-radius:8px;background:#fdf6f9}
+.iv-terms small{display:block;font-size:12px;font-weight:800;letter-spacing:1px;color:var(--p2)}
+.iv-terms ul{margin-top:6px;padding-left:18px;font-size:13px;line-height:1.65;color:var(--mut)}
+@media(max-width:520px){.iv-th,.iv-tr{grid-template-columns:30px 1fr auto}.iv-th span:nth-child(3),.iv-th span:nth-child(4),.iv-tr .q,.iv-tr .r{display:none}}
+
+/* bigger QR */
+.qrcard{max-width:460px!important}
+.qr-body{padding:22px 18px 22px}
+.qr-amt{font-size:42px}
+.qr-frame{padding:16px;margin:14px 0 12px}
+.qr-mid{width:64px;height:64px;font-size:28px}
+.qr-upi{font-size:15px}
+.qr-apps span{font-size:12px;padding:4px 12px}
+</style>
+</head>
+<body>
+<div class="banner">
+  <div class="brand">
+    <div id="logo" class="logo"></div>
+    <div class="bname"><div class="est">✦ Beauty Studio ✦</div><h1 id="shop-name"></h1><p id="shop-tag"></p></div>
+  </div>
+  <div class="orn"></div>
+</div>
+<div class="toolbar">
+  <div style="display:flex;gap:10px;flex-wrap:wrap"><button onclick="openCustomers()">👥 Saved</button><button onclick="openAddCustomer()">＋ Add</button></div>
+  <button onclick="openAdminLogin()">⚙ Admin</button>
+</div>
+<main>
+  <div id="services"></div>
+</main>
+
+<div id="cartbar" class="hide">
+  <div id="chips" class="chips"></div>
+  <div class="cbrow">
+    <div><small><span id="cnt">0</span> selected</small><b id="total">₹0</b></div>
+    <input id="less" type="number" min="0" placeholder="Less ₹" oninput="setLess(this.value)">
+    <button class="pri" onclick="openDetails()">Next →</button>
+  </div>
+</div>
+
+<!-- Customer details (popup) -->
+<div class="popup hide" id="m-details" onclick="if(event.target===this)closeModal('m-details')">
+  <div class="pbox" style="max-width:440px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <h3 style="font:700 22px 'Playfair Display',Georgia,serif;color:var(--p)">Customer Details</h3>
+      <button class="gray" style="padding:6px 12px" onclick="closeModal('m-details')" aria-label="Close">✕</button>
+    </div>
+    <label>Mobile number</label>
+    <input id="c-phone" inputmode="numeric" maxlength="10" placeholder="10 digit number" oninput="lookup()">
+    <label>Customer name</label>
+    <input id="c-name" placeholder="Name" oninput="lookup()">
+    <div class="status" id="c-status" style="margin-top:6px"></div>
+    <div id="c-found"></div>
+    <button class="pri" style="width:100%;padding:14px;font-size:16px;margin-top:14px" onclick="showBill()">Generate Bill</button>
+  </div>
+</div>
+
+<!-- Bill summary + payment -->
+<div class="page hide" id="m-bill">
+  <div class="pbar"><button onclick="closeModal('m-bill')">←</button><h2>Bill Summary</h2><button onclick="goHome()" aria-label="Close and go to dashboard" style="font-size:18px;line-height:1;padding:8px 13px">✕</button></div>
+  <div class="pbody">
+    <div id="bill-box"></div>
+    <div class="paywrap">
+      <div class="paylabel">Select payment mode</div>
+      <div class="paytabs">
+        <button id="p-Cash" class="on" onclick="setPay('Cash')"><svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.8"/><path d="M6 9.5v.01M18 14.5v.01"/></svg>Cash</button>
+        <button id="p-UPI" onclick="setPay('UPI')"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><path d="M14 14h2.5v2.5M20.5 14v.01M14 20.5h.01M17 20.5h3.5V18"/></svg>UPI</button>
+      </div>
+      <div id="qr-wrap" class="card qrcard hide"></div>
+      <button class="pri" style="width:100%;padding:15px;font-size:16px" onclick="confirmPay()">✓ Payment Received – Confirm &amp; Send Bill</button>
+      <div class="status" style="text-align:center">The bill goes to the customer's WhatsApp number with a thank-you message.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Done -->
+<div class="page hide" id="m-done">
+  <div class="pbar"><h2>✓ Payment Confirmed</h2><button onclick="resetBilling()" aria-label="Close and go to dashboard" style="font-size:18px;line-height:1;padding:8px 13px">✕</button></div>
+  <div class="pbody">
+    <div class="status ok" id="done-msg" style="font-size:15px;font-weight:700"></div>
+    <div id="done-bill"></div>
+    <button class="pri" style="width:100%" onclick="sendWhatsApp()">Send Bill on WhatsApp Again</button>
+    <button class="pri" style="width:100%" onclick="downloadPdf()">Download PDF</button>
+    <button class="gray" style="width:100%" onclick="resetBilling()">New Customer</button>
+  </div>
+</div>
+
+<!-- Saved customers -->
+<div class="page hide" id="m-cust">
+  <div class="pbar"><button onclick="closeModal('m-cust')">←</button><h2>Saved Customers</h2></div>
+  <div class="pbody">
+    <div class="sbar"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="c-search" placeholder="Search by name or mobile number" oninput="renderCustomers()"></div>
+    <div class="chead" id="c-count"></div>
+    <div id="cust-list" class="clist"></div>
+  </div>
+</div>
+
+<!-- Customer detail -->
+<div class="page hide" id="m-cdetail">
+  <div class="pbar"><button onclick="closeModal('m-cdetail')">←</button><h2 id="cd-title">Customer</h2></div>
+  <div class="pbody" id="cd-body"></div>
+</div>
+
+<!-- Admin login (popup) -->
+<div class="popup hide" id="m-login" onclick="if(event.target===this)closeModal('m-login')">
+  <div class="pbox" style="text-align:center">
+    <div style="font-size:34px">🔒</div>
+    <h3 style="font:700 22px 'Playfair Display',Georgia,serif;color:var(--p);margin:4px 0 12px">Admin Login</h3>
+    <input id="admin-pin" type="password" inputmode="numeric" placeholder="Enter PIN" style="text-align:center;font-size:20px;letter-spacing:6px" oninput="$('pin-err').innerText=''" onkeydown="if(event.key==='Enter')checkPin()">
+    <div id="pin-err" class="status" style="color:#c0392b;font-weight:600;margin-top:6px"></div>
+    <div style="display:flex;gap:8px;margin-top:8px"><button class="gray" style="flex:1" onclick="closeModal('m-login')">Cancel</button><button class="pri" style="flex:1" onclick="checkPin()">Open</button></div>
+  </div>
+</div>
+
+<!-- Admin -->
+<div class="page hide" id="m-admin">
+  <div class="pbar"><h2>Admin Panel</h2><button onclick="closeAdmin()">Done</button></div>
+  <div class="pbody">
+    <div class="card">
+      <div class="logoprev"><div id="a-logo-prev"></div><div style="flex:1"><div><label style="margin:0">Store logo</label><input type="file" id="a-logo" accept="image/*" onchange="pickLogo(this)"></div></div></div>
+      <div><label>Store / parlour name</label><input id="a-name"></div>
+      <div><label>Tagline</label><input id="a-tag" placeholder="e.g. Where beauty meets elegance"></div>
+      <div><label>Phone</label><input id="a-phone"></div>
+      <div><label>Address</label><input id="a-addr"></div>
+      <div><label>GSTIN (optional, shown on invoice)</label><input id="a-gst" placeholder="e.g. 21ABCDE1234F1Z5"></div>
+      <div><label>UPI ID (payment QR is made from this)</label><input id="a-upi" placeholder="name@upi"></div>
+      <div><label>Country code</label><input id="a-cc" placeholder="91"></div>
+      <div style="grid-column:1/-1"><label>Terms &amp; conditions (one per line, shown on invoice)</label><textarea id="a-terms" rows="4" placeholder="e.g. Services once availed are non-refundable."></textarea></div>
+      <div class="offhead"><b>Return coupon (optional)</b><small>To offer a discount on the customer's next visit, fill both fields. Leave them empty to keep it off – nothing will show on the bill.</small></div>
+      <div><label>Coupon valid for (days)</label><input id="a-days" type="number" min="1" placeholder="e.g. 30"></div>
+      <div><label>Discount on next visit (%)</label><input id="a-pct" type="number" min="0" max="100" step="0.5" placeholder="e.g. 10"></div>
+      <div><label>Admin PIN</label><input id="a-pin" type="password" inputmode="numeric"></div>
+      <button class="pri" style="width:100%;margin-top:12px" onclick="saveSettings()">Save Settings</button>
+    </div>
+    <h2 style="font:700 18px 'Playfair Display',Georgia,serif;color:var(--p)">Categories &amp; Services</h2>
+    <div class="row"><input id="new-cat" placeholder="New category name"><button class="add" onclick="addCat()">＋ Category</button></div>
+    <div id="admin-list"></div>
+  </div>
+</div>
+
+<!-- Add customer popup -->
+<div class="popup hide" id="m-add" onclick="if(event.target===this)closeModal('m-add')">
+  <div class="pbox">
+    <h3 style="font:700 20px 'Playfair Display',Georgia,serif;color:var(--p)">Add Customer</h3>
+    <label>Customer name</label><input id="n-name" placeholder="Name">
+    <label>Mobile number</label><input id="n-phone" inputmode="numeric" maxlength="10" placeholder="10 digit number" onkeydown="if(event.key==='Enter')addCustomer()">
+    <div style="display:flex;gap:8px;margin-top:14px"><button class="gray" style="flex:1" onclick="closeModal('m-add')">Cancel</button><button class="pri" style="flex:1" onclick="addCustomer()">Save</button></div>
+  </div>
+</div>
+
+<!-- Success popup -->
+<div class="popup hide" id="m-saved" onclick="if(event.target===this)closeModal('m-saved')">
+  <div class="pbox" style="text-align:center">
+    <div class="okring"><svg viewBox="0 0 52 52"><path d="M13 27 l9 9 l17 -19"/></svg></div>
+    <h3 id="sv-title" style="font:700 22px 'Playfair Display',Georgia,serif;color:var(--p)"></h3>
+    <div id="sv-name" style="font-size:18px;font-weight:700;margin-top:8px"></div>
+    <div id="sv-sub" class="status" style="margin-top:2px"></div>
+    <button class="pri" style="width:100%;margin-top:16px" onclick="closeModal('m-saved')">Done</button>
+  </div>
+</div>
+
+<!-- Alert / confirm popup -->
+<div class="popup hide" id="m-alert" style="z-index:40" onclick="if(event.target===this)closeAlert()">
+  <div class="pbox" style="text-align:center;max-width:360px">
+    <div class="aicon" id="al-icon"></div>
+    <h3 id="al-title" style="font:700 21px 'Playfair Display',Georgia,serif;color:var(--p)"></h3>
+    <div class="amsg" id="al-msg"></div>
+    <div id="al-btns" style="display:flex;gap:8px;margin-top:20px"></div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
