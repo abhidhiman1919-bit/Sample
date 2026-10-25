@@ -279,18 +279,15 @@ function resetBilling() {
 
 /* ---------- WhatsApp & PDF ---------- */
 function waText(b) {
-  const saved = (b.less || 0) + (b.dAmt || 0);
-  return `*${S.name}*` + (S.tag ? `\n_${S.tag}_` : '') +
-    `\n\nDear ${b.name},\n\nThank you for visiting *${S.name}*! 🌸 We hope you loved your experience.\n\n` +
-    `📄 Your invoice *${b.inv}* (PDF) is attached.\n💰 Total paid: *${rs(b.total)}* (${b.pay})` +
-    (saved ? `\n🎉 You saved ${rs(saved)} on this bill` : '') +
+  return `Dear *${b.name}*,\n\nThank you for visiting *${S.name}*! 🌸\nWe hope you loved your experience.\n\n` +
+    `📄 Your invoice *${b.inv}* of *${rs(b.total)}* is attached as PDF.` +
     (b.offerPct ? `\n\n🎁 Visit again by ${new Date(b.offerUntil).toLocaleDateString('en-IN')} and get *${b.offerPct}% off*!` : '') +
-    (S.review ? `\n\n⭐ *Rate us* – your feedback means a lot to us:\n${S.review}` : '') +
-    `\n\nThank you for choosing ${S.name}. We look forward to seeing you again! 💖` + (S.phone ? `\n📞 ${S.phone}` : '');
+    (S.review ? `\n\n⭐ *Please rate us* – your feedback means a lot to us:\n${S.review}` : '') +
+    `\n\nThank you for choosing ${S.name}. We look forward to seeing you again! 💖\n– ${S.name}` + (S.phone ? `\n📞 ${S.phone}` : '');
 }
 
 function getPdfBlob(cb) {
-  const go = () => circleLogo(l => buildPdf(l, cb));
+  const go = () => circleLogo((l, j) => buildPdf(l, cb, j));
   if (document.fonts && document.fonts.load) document.fonts.load('140px "Great Vibes"', S.name).then(go, go); else go();
 }
 
@@ -303,26 +300,42 @@ function saveBlob(blob, name) {
 
 /* Mobile: share sheet -> WhatsApp chuno -> PDF attach hokar jata hai.
    Desktop: PDF download hota hai + WhatsApp chat khulti hai, PDF attach karna hai. */
+function sendWaText() {
+  const b = cur; if (!b) return;
+  window.open(`https://wa.me/${S.cc || '91'}${b.phone}?text=${encodeURIComponent(waText(b))}`, '_blank');
+}
+
 function sendWhatsApp() {
   const b = cur, text = waText(b), name = b.inv + '.pdf';
+  try { navigator.clipboard && navigator.clipboard.writeText(text); } catch (e) {}
   getPdfBlob(blob => {
     const file = new File([blob], name, { type: 'application/pdf' });
     const fallback = () => {
       saveBlob(blob, name);
-      $('done-msg').innerText = `${rs(b.total)} received from ${b.name} • PDF downloaded – attach "${name}" in the WhatsApp chat`;
-      window.open(`https://wa.me/${S.cc || '91'}${b.phone}?text=${encodeURIComponent(text)}`, '_blank');
+      $('done-msg').innerText = `${rs(b.total)} received from ${b.name} • PDF downloaded – attach "${name}" in the chat`;
+      sendWaText();
     };
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      navigator.share({ files: [file], title: b.inv, text }).catch(e => { if (!e || e.name !== 'AbortError') fallback(); });
+      navigator.share({ files: [file], title: b.inv, text }).then(() => {
+        $('done-msg').innerText = `${rs(b.total)} received from ${b.name} • PDF shared ✓ – now tap "Send Thank-you Message"`;
+      }).catch(e => { if (!e || e.name !== 'AbortError') fallback(); });
     } else fallback();
   });
 }
 
 function circleLogo(cb) {
-  if (!S.logo) return cb(null);
+  if (!S.logo) return cb(null, null);
   const im = new Image();
-  im.onload = () => { const c = document.createElement('canvas'); c.width = c.height = 240; const x = c.getContext('2d'); x.beginPath(); x.arc(120, 120, 120, 0, Math.PI * 2); x.clip(); x.drawImage(im, 0, 0, 240, 240); cb(c.toDataURL('image/png')); };
-  im.onerror = () => cb(null);
+  im.onload = () => {
+    const c = document.createElement('canvas'); c.width = c.height = 240; const x = c.getContext('2d');
+    x.save(); x.beginPath(); x.arc(120, 120, 120, 0, Math.PI * 2); x.clip(); x.drawImage(im, 0, 0, 240, 240); x.restore();
+    const png = c.toDataURL('image/png');
+    const c2 = document.createElement('canvas'); c2.width = c2.height = 240; const x2 = c2.getContext('2d');
+    x2.fillStyle = '#2a0f1e'; x2.fillRect(0, 0, 240, 240);
+    x2.beginPath(); x2.arc(120, 120, 120, 0, Math.PI * 2); x2.clip(); x2.fillStyle = '#fff'; x2.fillRect(0, 0, 240, 240); x2.drawImage(im, 0, 0, 240, 240);
+    cb(png, c2.toDataURL('image/jpeg', 0.92));
+  };
+  im.onerror = () => cb(null, null);
   im.src = S.logo;
 }
 
@@ -336,11 +349,11 @@ function sigImage(name) {
 }
 
 function downloadPdf() {
-  const go = () => circleLogo(buildPdf);
+  const go = () => circleLogo((l, j) => buildPdf(l, null, j));
   if (document.fonts && document.fonts.load) document.fonts.load('140px "Great Vibes"', S.name).then(go, go); else go();
 }
 
-function buildPdf(logoImg, cb) {
+function buildPdf(logoImg, cb, logoJpg) {
   const b = cur, { jsPDF } = window.jspdf, doc = new jsPDF({ unit: 'mm', format: 'a4' }), H = 297;
   const W = 210, L = 14, R = 196, gold = [217, 180, 106], plum = [122, 33, 80], dark = [26, 10, 20], mut = [122, 102, 112], ink = [43, 26, 35], green = [30, 132, 73], soft = [253, 246, 249], pink = [185, 72, 127];
   const tc = c => doc.setTextColor(c[0], c[1], c[2]), fc = c => doc.setFillColor(c[0], c[1], c[2]), dc = c => doc.setDrawColor(c[0], c[1], c[2]);
@@ -353,9 +366,9 @@ function buildPdf(logoImg, cb) {
   fc(dark); doc.rect(0, 0, W, 42, 'F');
   faint(0.09, () => { fc(gold); doc.circle(194, 2, 30, 'F'); doc.circle(2, 4, 20, 'F'); });
   fc(gold); doc.rect(0, 42, W, 1.4, 'F'); doc.rect(0, 44.6, W, 0.4, 'F');
-  if (logoImg) doc.addImage(logoImg, 'PNG', L + 2, 7, 28, 28);
+  if (logoJpg) doc.addImage(logoJpg, 'JPEG', L + 2, 7, 28, 28); else if (logoImg) doc.addImage(logoImg, 'PNG', L + 2, 7, 28, 28);
   dc(gold); doc.setLineWidth(0.8); doc.circle(L + 16, 21, 14, 'S');
-  if (!logoImg) { font('bold', 24, gold); txt(initial, L + 16, 29, { align: 'center' }); }
+  if (!logoImg && !logoJpg) { font('bold', 24, gold); txt(initial, L + 16, 29, { align: 'center' }); }
   let fs = 21; font('bold', fs, [243, 217, 160]);
   const nm = S.name.toUpperCase();
   while (doc.getTextWidth(nm) > 135 && fs > 11) { fs -= 1; doc.setFontSize(fs); }

@@ -556,7 +556,7 @@ img,canvas,svg{max-width:100%}
       </div>
       <div id="qr-wrap" class="card qrcard hide"></div>
       <button class="pri" style="width:100%;padding:15px;font-size:16px" onclick="confirmPay()">✓ Payment Received – Confirm &amp; Send Bill</button>
-      <div class="status" style="text-align:center">The bill goes to the customer's WhatsApp number with a thank-you message.</div>
+      <div class="status" style="text-align:center">The PDF invoice goes on WhatsApp first; then send the thank-you message with the Rate us link.</div>
     </div>
   </div>
 </div>
@@ -567,7 +567,8 @@ img,canvas,svg{max-width:100%}
   <div class="pbody">
     <div class="status ok" id="done-msg" style="font-size:15px;font-weight:700"></div>
     <div id="done-bill"></div>
-    <button class="pri" style="width:100%" onclick="sendWhatsApp()">Send Bill on WhatsApp Again</button>
+    <button class="pri" style="width:100%" onclick="sendWhatsApp()">📄 Send PDF Invoice on WhatsApp</button>
+    <button class="pri" style="width:100%" onclick="sendWaText()">💬 Send Thank-you Message (with Rate us)</button>
     <button class="pri" style="width:100%" onclick="downloadPdf()">Download PDF</button>
     <button class="gray" style="width:100%" onclick="resetBilling()">New Customer</button>
   </div>
