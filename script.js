@@ -7,7 +7,7 @@ const db = () => load('bp_cust', {});
 const setDb = d => store('bp_cust', d);
 const rs = n => '₹' + n;
 
-const DEF_SET = { name: 'Glow Beauty Parlour', tag: 'Where beauty meets elegance', logo: '', phone: '', address: '', upi: '', cc: '91', pin: '1234', days: 30, pct: 0, offer: false, gst: '', terms: 'Services once availed cannot be refunded or exchanged.\nReturn coupon is valid only till the date shown and cannot be combined with other offers.\nPlease keep this invoice for future reference.' };
+const DEF_SET = { name: 'Glow Beauty Parlour', tag: 'Where beauty meets elegance', logo: '', phone: '', address: '', upi: '', review: '', cc: '91', pin: '1234', days: 30, pct: 0, offer: false, gst: '', terms: 'Services once availed cannot be refunded or exchanged.\nReturn coupon is valid only till the date shown and cannot be combined with other offers.\nPlease keep this invoice for future reference.' };
 const mk = (n, p) => ({ n, price: p });
 const DEF_SERV = [
   { name: 'Facial', items: [mk('Fruit Facial', 800), mk('Gold Facial', 1200), mk('Diamond Facial', 1500)] },
@@ -233,7 +233,7 @@ function billHtml() {
       </div>
     </div>
     ${terms.length ? `<div class="iv-terms"><small>TERMS &amp; CONDITIONS</small><ul>${terms.map(t => `<li>${esc(t)}</li>`).join('')}</ul></div>` : ''}
-    <div class="iv-thanks">${orn}<b>Thank you for visiting ${esc(S.name)}!</b><p>We look forward to seeing you again.</p></div>
+    <div class="iv-thanks">${orn}<b>Thank you for visiting ${esc(S.name)}!</b><p>We look forward to seeing you again.</p>${S.review ? `<p style="margin-top:8px"><a href="${esc(S.review)}" target="_blank" rel="noopener" style="color:var(--p);font-weight:700">⭐ Rate us on Google</a></p>` : ''}</div>
     <div class="iv-sign"><div class="iv-sign-wrap"><span style="min-height:58px"></span>Customer Signature</div><div class="iv-sign-wrap"><span class="sg">${esc(S.name)}</span>Authorised Signatory</div></div>
     <div class="iv-foot">${contact}<small>This is a computer-generated invoice.</small></div>
   </div>`;
@@ -278,17 +278,44 @@ function resetBilling() {
 }
 
 /* ---------- WhatsApp & PDF ---------- */
-function sendWhatsApp() {
-  const b = cur, saved = (b.less || 0) + (b.dAmt || 0);
-  const t = `*${S.name}*` + (S.tag ? `\n_${S.tag}_` : '') + `\n\nDear ${b.name},\nThank you for visiting *${S.name}*! 🌸 We hope you loved your experience.\n\n` +
-    `Invoice: ${b.inv}\nDate: ${b.date} ${b.time}\n\n*Services*\n` +
-    b.items.map(i => `• ${i.name} – ${rs(i.price)}`).join('\n') +
-    `\n\nSubtotal: ${rs(b.subtotal)}` + (b.less ? `\nDiscount: -${rs(b.less)}` : '') + (b.dAmt ? `\nReturn discount (${b.dPct}%): -${rs(b.dAmt)}` : '') +
-    (saved ? `\nTotal discount given: -${rs(saved)}` : '') +
-    `\n*Total Paid: ${rs(b.total)}*\nPayment mode: ${b.pay}` +
-    (b.offerPct ? `\n\n🎁 Visit again by ${new Date(b.offerUntil).toLocaleDateString('en-IN')} and get ${b.offerPct}% off!` : '') +
+function waText(b) {
+  const saved = (b.less || 0) + (b.dAmt || 0);
+  return `*${S.name}*` + (S.tag ? `\n_${S.tag}_` : '') +
+    `\n\nDear ${b.name},\n\nThank you for visiting *${S.name}*! 🌸 We hope you loved your experience.\n\n` +
+    `📄 Your invoice *${b.inv}* (PDF) is attached.\n💰 Total paid: *${rs(b.total)}* (${b.pay})` +
+    (saved ? `\n🎉 You saved ${rs(saved)} on this bill` : '') +
+    (b.offerPct ? `\n\n🎁 Visit again by ${new Date(b.offerUntil).toLocaleDateString('en-IN')} and get *${b.offerPct}% off*!` : '') +
+    (S.review ? `\n\n⭐ *Rate us* – your feedback means a lot to us:\n${S.review}` : '') +
     `\n\nThank you for choosing ${S.name}. We look forward to seeing you again! 💖` + (S.phone ? `\n📞 ${S.phone}` : '');
-  window.open(`https://wa.me/${S.cc || '91'}${b.phone}?text=${encodeURIComponent(t)}`, '_blank');
+}
+
+function getPdfBlob(cb) {
+  const go = () => circleLogo(l => buildPdf(l, cb));
+  if (document.fonts && document.fonts.load) document.fonts.load('140px "Great Vibes"', S.name).then(go, go); else go();
+}
+
+function saveBlob(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
+/* Mobile: share sheet -> WhatsApp chuno -> PDF attach hokar jata hai.
+   Desktop: PDF download hota hai + WhatsApp chat khulti hai, PDF attach karna hai. */
+function sendWhatsApp() {
+  const b = cur, text = waText(b), name = b.inv + '.pdf';
+  getPdfBlob(blob => {
+    const file = new File([blob], name, { type: 'application/pdf' });
+    const fallback = () => {
+      saveBlob(blob, name);
+      $('done-msg').innerText = `${rs(b.total)} received from ${b.name} • PDF downloaded – attach "${name}" in the WhatsApp chat`;
+      window.open(`https://wa.me/${S.cc || '91'}${b.phone}?text=${encodeURIComponent(text)}`, '_blank');
+    };
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: b.inv, text }).catch(e => { if (!e || e.name !== 'AbortError') fallback(); });
+    } else fallback();
+  });
 }
 
 function circleLogo(cb) {
@@ -313,7 +340,7 @@ function downloadPdf() {
   if (document.fonts && document.fonts.load) document.fonts.load('140px "Great Vibes"', S.name).then(go, go); else go();
 }
 
-function buildPdf(logoImg) {
+function buildPdf(logoImg, cb) {
   const b = cur, { jsPDF } = window.jspdf, doc = new jsPDF({ unit: 'mm', format: 'a4' }), H = 297;
   const W = 210, L = 14, R = 196, gold = [217, 180, 106], plum = [122, 33, 80], dark = [26, 10, 20], mut = [122, 102, 112], ink = [43, 26, 35], green = [30, 132, 73], soft = [253, 246, 249], pink = [185, 72, 127];
   const tc = c => doc.setTextColor(c[0], c[1], c[2]), fc = c => doc.setFillColor(c[0], c[1], c[2]), dc = c => doc.setDrawColor(c[0], c[1], c[2]);
@@ -419,6 +446,7 @@ function buildPdf(logoImg) {
   fc(gold); doc.triangle(W / 2 - 3, y, W / 2, y - 2.5, W / 2 + 3, y, 'F'); doc.triangle(W / 2 - 3, y, W / 2, y + 2.5, W / 2 + 3, y, 'F');
   font('bolditalic', 14, plum); txt('Thank you for visiting ' + S.name + '!', W / 2, y + 7, { align: 'center', maxWidth: 170 });
   font('normal', 10, mut); txt('We look forward to seeing you again.', W / 2, y + 12.5, { align: 'center' });
+  if (S.review) { font('bold', 10, plum); doc.textWithLink('Rate us on Google  (tap here)', W / 2, y + 18.5, { align: 'center', url: S.review }); }
   y += 25; dc([170, 150, 160]); doc.setLineWidth(0.3); doc.line(L, y, L + 52, y); doc.line(R - 52, y, R, y);
   const sg = sigImage(S.name);
   if (sg) { let sw = Math.min(52, sg.w / sg.h * 12), sh = sw * sg.h / sg.w; if (sh > 12) { sh = 12; sw = sh * sg.w / sg.h; } doc.addImage(sg.data, 'PNG', R - sw, y - sh + 1.5, sw, sh); }
@@ -435,7 +463,7 @@ function buildPdf(logoImg) {
     font('normal', 9, [240, 219, 228]); txt([S.address, S.phone].filter(Boolean).join('   |   ') || S.name, W / 2, H - 9.5, { align: 'center', maxWidth: 180 });
     font('normal', 7.5, [190, 160, 175]); txt('This is a computer-generated invoice.', W / 2, H - 4.5, { align: 'center' });
   }
-  doc.save(b.inv + '.pdf');
+  if (cb) cb(doc.output('blob')); else doc.save(b.inv + '.pdf');
 }
 
 /* ---------- customers ---------- */
@@ -500,7 +528,7 @@ function checkPin() {
 }
 
 function fillAdmin() {
-  $('a-name').value = S.name; $('a-tag').value = S.tag || ''; $('a-phone').value = S.phone; $('a-addr').value = S.address; $('a-gst').value = S.gst || ''; $('a-terms').value = S.terms || ''; $('a-upi').value = S.upi;
+  $('a-name').value = S.name; $('a-tag').value = S.tag || ''; $('a-phone').value = S.phone; $('a-addr').value = S.address; $('a-gst').value = S.gst || ''; $('a-terms').value = S.terms || ''; $('a-upi').value = S.upi; $('a-review').value = S.review || '';
   $('a-cc').value = S.cc; $('a-days').value = S.offer ? S.days : ''; $('a-pct').value = S.offer ? S.pct : ''; $('a-pin').value = S.pin;
   pendingLogo = S.logo || null;
   $('a-logo-prev').innerHTML = pendingLogo ? `<img src="${pendingLogo}">` : '';
@@ -533,7 +561,7 @@ function saveSettings() {
   } else { days = 30; pct = 0; }
   if (!pin) return showAlert('PIN required', 'The admin PIN cannot be empty.', 'a-pin');
   S = { name: $('a-name').value.trim() || DEF_SET.name, tag: $('a-tag').value.trim(), logo: pendingLogo || '', phone: $('a-phone').value.trim(), address: $('a-addr').value.trim(), gst: $('a-gst').value.trim(), terms: $('a-terms').value.trim(),
-        upi: $('a-upi').value.trim(), cc: $('a-cc').value.trim() || '91', pin, days, pct, offer };
+        upi: $('a-upi').value.trim(), review: $('a-review').value.trim(), cc: $('a-cc').value.trim() || '91', pin, days, pct, offer };
   store('bp_set', S); applyShop(); showSaved('Settings Saved', 'Your changes are applied', '');
 }
 
